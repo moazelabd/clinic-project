@@ -1,0 +1,20 @@
+# uploaded images by users (keep folder, ignore its content)
+uploads/doctors/*
+uploads/medicines/*
+!uploads/doctors/.gitkeep
+!uploads/medicines/.gitkeep
+
+# sensitive DB credentials
+includes/config.php
+
+# CLI admin-creation script (has no secrets itself, but keep it local-only)
+create_admin.php
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# logs
+*.log
