@@ -4,7 +4,7 @@ let searchDebounce = null;
 document.addEventListener('DOMContentLoaded', () => {
   loadStorages();
 
-  document.getElementById('btnAddStorage').addEventListener('click', () => {
+  on('btnAddStorage', 'click', () => {
     document.getElementById('newStorageName').value = '';
     openModal('modalAddStorage');
   });
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) { showToast(e.message); }
   });
 
-  document.getElementById('btnDeleteStorage').addEventListener('click', async () => {
+  on('btnDeleteStorage', 'click', async () => {
     if (!currentStorageId) return;
     if (!confirm('متأكد إنك عايز تمسح المخزن ده؟ هيتمسح كل الأدوية اللي جواه.')) return;
     try {
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) { showToast(e.message); }
   });
 
-  document.getElementById('btnAddMedicine').addEventListener('click', () => {
+  on('btnAddMedicine', 'click', () => {
     openMedicineModal(null);
   });
 
@@ -103,12 +103,20 @@ async function loadMedicines(q) {
 }
 
 function openMedicineModal(med) {
-  document.getElementById('medicineModalTitle').textContent = med ? 'تعديل الدواء' : 'إضافة دواء';
+  document.getElementById('medicineModalTitle').textContent = med ? (IS_ADMIN ? 'تعديل الدواء' : 'بيانات الدواء') : 'إضافة دواء';
   document.getElementById('medId').value = med ? med.id : '';
   document.getElementById('medName').value = med ? med.name : '';
   document.getElementById('medStock').value = med ? med.stock : 0;
   document.getElementById('medImage').value = '';
-  document.getElementById('btnDeleteMedicine').style.display = med ? 'inline-block' : 'none';
+
+  const readOnly = med && !IS_ADMIN;
+  document.getElementById('medName').disabled = readOnly;
+  document.getElementById('medStock').disabled = readOnly;
+  document.getElementById('medImage').style.display = readOnly ? 'none' : '';
+  document.getElementById('stockMinus').style.display = readOnly ? 'none' : '';
+  document.getElementById('stockPlus').style.display = readOnly ? 'none' : '';
+  document.getElementById('confirmMedicine').style.display = readOnly ? 'none' : '';
+  document.getElementById('btnDeleteMedicine').style.display = (med && IS_ADMIN) ? 'inline-block' : 'none';
   openModal('modalMedicine');
 }
 

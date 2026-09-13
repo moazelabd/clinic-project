@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($username === '' || $password === '') {
             $error = 'من فضلك ادخل اسم المستخدم وكلمة السر.';
         } else {
-            $stmt = $pdo->prepare('SELECT id, username, password_hash FROM users WHERE username = :u LIMIT 1');
+            $stmt = $pdo->prepare('SELECT id, username, password_hash, role, group_id FROM users WHERE username = :u LIMIT 1');
             $stmt->execute([':u' => $username]);
             $user = $stmt->fetch();
 
@@ -57,6 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 session_regenerate_id(true);
                 $_SESSION['user_id']  = $user['id'];
                 $_SESSION['username'] = $user['username'];
+                $_SESSION['role']     = $user['role'];
+                $_SESSION['group_id'] = $user['group_id'] !== null ? (int)$user['group_id'] : null;
                 $_SESSION['last_activity'] = time();
                 header('Location: dashboard.php');
                 exit;

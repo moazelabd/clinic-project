@@ -2,6 +2,8 @@
 declare(strict_types=1);
 require_once __DIR__ . '/includes/auth_check.php';
 $token = csrf_token();
+$isAdmin = is_admin();
+$groupId = active_group_id();
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -10,6 +12,7 @@ $token = csrf_token();
 <title>المخازن</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="csrf-token" content="<?= e($token) ?>">
+<meta name="is-admin" content="<?= $isAdmin ? '1' : '0' ?>">
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -21,11 +24,19 @@ $token = csrf_token();
     </div>
   </header>
 
+  <?php if ($isAdmin && !$groupId): ?>
+    <div class="empty-hint" style="margin-top:40px;">
+      لسه معندكش جروب شغّال عليه.
+      <a href="groups.php" style="color:var(--accent);">روح لصفحة الجروبات</a> واعمل واحد أو اختار جروب موجود.
+    </div>
+  <?php else: ?>
   <div class="app-layout">
     <aside class="sidebar">
       <div class="sidebar-header">storage names</div>
       <div class="sidebar-list" id="storageList"></div>
+      <?php if ($isAdmin): ?>
       <button class="sidebar-add-btn" id="btnAddStorage">+ إضافة مخزن جديد</button>
+      <?php endif; ?>
     </aside>
 
     <main class="content-area">
@@ -34,13 +45,16 @@ $token = csrf_token();
       <div id="storageContent" style="display:none;">
         <div class="content-toolbar">
           <input type="text" class="search-input" id="searchInput" placeholder="ابحث باسم الدواء...">
+          <?php if ($isAdmin): ?>
           <button class="btn btn-primary" id="btnAddMedicine">+ إضافة دواء</button>
           <button class="btn btn-danger" id="btnDeleteStorage">حذف المخزن</button>
+          <?php endif; ?>
         </div>
         <div class="card-grid" id="medicineGrid"></div>
       </div>
     </main>
   </div>
+  <?php endif; ?>
 
   <!-- Add storage modal -->
   <div class="modal-overlay" id="modalAddStorage">

@@ -1,6 +1,7 @@
 // Shared helpers used by storages.js and doctors.js
 
 const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').content;
+const IS_ADMIN = document.querySelector('meta[name="is-admin"]')?.content === '1';
 
 async function apiPost(url, formDataOrObject) {
   let body;
@@ -52,6 +53,12 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+/** Attach a listener only if the element exists (buttons hidden for non-admins aren't in the DOM). */
+function on(id, event, fn) {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener(event, fn);
+}
+
 function openModal(id) {
   document.getElementById(id).classList.add('open');
 }
@@ -59,6 +66,8 @@ function closeModal(id) {
   document.getElementById(id).classList.remove('open');
 }
 
+// Any "cancel"/close button uses class="js-modal-cancel" data-modal="modalId"
+// instead of inline onclick="", because the site's CSP blocks inline JS.
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('.js-modal-cancel');
   if (btn) {

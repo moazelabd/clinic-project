@@ -63,25 +63,49 @@
 - **رفع الصور**: يتم التحقق من نوع الملف الحقيقي (MIME) عبر `finfo` + `getimagesize`، حجم أقصى 4MB، وإعادة تسمية الملف باسم عشوائي لمنع أي تلاعب أو تنفيذ أكواد، بالإضافة لملف `.htaccess` داخل `uploads/` يمنع تنفيذ أي سكريبت هناك.
 - **Headers أمان إضافية**: `X-Frame-Options`, `X-Content-Type-Options`, `Content-Security-Policy`, إلخ، مُرسلة مع كل صفحة.
 
-## هيكل المشروع
+## نظام الصلاحيات والجروبات (جديد)
+
+- **role**: كل يوزر إما `admin` أو `user`. الأدمن بس يقدر يضيف/يعدل/يمسح أي حاجة (مخازن، أدوية، دكاتره، زيارات، قائمة سوداء). اليوزر العادي بيشوف بس (Read-only).
+- **groups**: كل مخزن ودكتور تابع لجروب معين. الأدمن بس يقدر يعمل جروبات (`groups.php`)، وليها كود انضمام قصير بيتولد أوتوماتيك.
+- **طلبات الانضمام**: اليوزر العادي أول ما يسجل دخول من غير جروب بيتوجه لصفحة `join.php` ويكتب الكود، بيتعمل طلب "pending"، والأدمن بيشوفه في `groups.php` ويقبل/يرفض.
+- **تبديل الجروب (للأدمن)**: الأدمن ممكن يدير أكتر من جروب، ويختار "يشتغل" على أنهي جروب من صفحة `groups.php` — البيانات في المخازن/الدكاتره بتتفلتر حسب الجروب النشط بس.
+
+### تفعيل النظام ده على مشروع موجود بالفعل (Migration)
+
+لو عندك المشروع شغال قبل كده، شغّل ملف `migration_groups.sql` مرة واحدة على قاعدة بياناتك (من phpMyAdmin → تبويب SQL، أو `mysql -u root -p clinic_db < migration_groups.sql`). الملف ده بيضيف الأعمدة والجداول الجديدة من غير ما يمسح أي بيانات موجودة، وبيخلي اليوزر `admin` أدمن أوتوماتيك (عدّل الاسم في آخر سطر لو يوزرك اسمه مختلف).
+
+### إضافة يوزر جديد بالدور المطلوب
+```bash
+php create_admin.php admin "PasswordQuiJdaan123!" admin
+php create_admin.php mohamed "Pass123456" user
+```
+(لو معملتش الحقل التالت، هيتحط `user` بشكل افتراضي)
+
+
 ```
 ├── index.php              # يوجّه لصفحة الدخول أو الرئيسية
 ├── login.php / logout.php
-├── dashboard.php          # زرار الدكاتره + زرار المخازن
+├── dashboard.php          # زرار الدكاتره + زرار المخازن + زرار الجروبات (أدمن)
+├── join.php               # صفحة انضمام اليوزر العادي لجروب بكود
+├── groups.php             # إدارة الجروبات وطلبات الانضمام (أدمن بس)
 ├── storages.php           # صفحة المخازن (سايدبار + أدوية)
 ├── doctors.php            # صفحة الدكاتره (سايدبار + تفاصيل الدكتور)
-├── create_admin.php       # سكريبت CLI لإضافة مستخدم جديد يدويًا
-├── schema.sql             # هيكل قاعدة البيانات
+├── create_admin.php       # سكريبت CLI لإضافة مستخدم جديد يدويًا (admin/user)
+├── schema.sql             # هيكل قاعدة البيانات (لتنصيب جديد)
+├── migration_groups.sql   # تحديث قاعدة بيانات موجودة بالفعل بالجروبات والصلاحيات
 ├── includes/
 │   ├── config.php         # اتصال قاعدة البيانات + إعدادات الأمان
-│   ├── auth_check.php     # حماية الصفحات
+│   ├── auth_check.php     # حماية الصفحات + توجيه لصفحة join لو مفيش جروب
+│   ├── permissions.php    # دوال الصلاحيات وتحديد الجروب النشط
 │   └── functions.php      # التحقق من المدخلات + رفع الصور
 ├── api/
 │   ├── storages_api.php
 │   ├── medicines_api.php
 │   ├── doctors_api.php
-│   └── visits_api.php
+│   ├── visits_api.php
+│   ├── groups_api.php
+│   └── join_requests_api.php
 ├── assets/css/style.css
-├── assets/js/{app,storages,doctors}.js
+├── assets/js/{app,storages,doctors,groups,join}.js
 └── uploads/{doctors,medicines}/
 ```

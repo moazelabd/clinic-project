@@ -4,13 +4,13 @@ let currentDoctorData = null;
 document.addEventListener('DOMContentLoaded', () => {
   loadDoctors();
 
-  document.getElementById('btnAddDoctor').addEventListener('click', () => {
+  on('btnAddDoctor', 'click', () => {
     document.getElementById('newDoctorName').value = '';
     document.getElementById('newDoctorImage').value = '';
     openModal('modalAddDoctor');
   });
 
-  document.getElementById('confirmAddDoctor').addEventListener('click', async () => {
+  on('confirmAddDoctor', 'click', async () => {
     const name = document.getElementById('newDoctorName').value.trim();
     if (!name) { showToast('اكتب اسم الدكتور'); return; }
     const fd = new FormData();
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) { showToast(e.message); }
   });
 
-  document.getElementById('btnDeleteDoctor').addEventListener('click', async () => {
+  on('btnDeleteDoctor', 'click', async () => {
     if (!currentDoctorId) return;
     if (!confirm('متأكد إنك عايز تمسح الدكتور ده؟')) return;
     try {
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) { showToast(e.message); }
   });
 
-  document.getElementById('doctorTitle').addEventListener('change', async (e) => {
+  on('doctorTitle', 'change', async (e) => {
     if (!currentDoctorId) return;
     try {
       await apiPost('api/doctors_api.php?action=update_title', { id: currentDoctorId, title: e.target.value });
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e2) { showToast(e2.message); }
   });
 
-  document.getElementById('btnToggleBlacklist').addEventListener('click', () => {
+  on('btnToggleBlacklist', 'click', () => {
     if (!currentDoctorData) return;
     if (currentDoctorData.is_blacklisted == 1) {
       // remove from blacklist directly, no confirmation needed for removing
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  document.getElementById('confirmBlacklist').addEventListener('click', async () => {
+  on('confirmBlacklist', 'click', async () => {
     const reason = document.getElementById('blacklistReasonInput').value.trim();
     try {
       await apiPost('api/doctors_api.php?action=toggle_blacklist', {
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) { showToast(e.message); }
   });
 
-  document.getElementById('blacklistReason').addEventListener('change', async (e) => {
+  on('blacklistReason', 'change', async (e) => {
     if (!currentDoctorId || currentDoctorData.is_blacklisted != 1) return;
     try {
       await apiPost('api/doctors_api.php?action=toggle_blacklist', {
@@ -77,12 +77,12 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e2) { showToast(e2.message); }
   });
 
-  document.getElementById('btnAddVisit').addEventListener('click', () => {
+  on('btnAddVisit', 'click', () => {
     document.getElementById('visitDate').value = '';
     openModal('modalAddVisit');
   });
 
-  document.getElementById('confirmAddVisit').addEventListener('click', async () => {
+  on('confirmAddVisit', 'click', async () => {
     const date = document.getElementById('visitDate').value;
     if (!date) { showToast('اختار التاريخ'); return; }
     try {
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) { showToast(e.message); }
   });
 
-  document.getElementById('confirmVisitNote').addEventListener('click', async () => {
+  on('confirmVisitNote', 'click', async () => {
     const id = document.getElementById('visitNoteId').value;
     const note = document.getElementById('visitNoteText').value;
     try {
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) { showToast(e.message); }
   });
 
-  document.getElementById('btnSaveNote').addEventListener('click', async () => {
+  on('btnSaveNote', 'click', async () => {
     if (!currentDoctorId) return;
     const note = document.getElementById('generalNote').value;
     try {
@@ -154,7 +154,8 @@ async function loadDoctorDetail(id) {
 
     const isBl = data.doctor.is_blacklisted == 1;
     document.getElementById('blacklistBadge').className = 'status-badge' + (isBl ? ' on' : '');
-    document.getElementById('btnToggleBlacklist').textContent = isBl ? 'إزالة من القائمة السوداء' : 'إضافة للقائمة السوداء';
+    const toggleBtn = document.getElementById('btnToggleBlacklist');
+    if (toggleBtn) toggleBtn.textContent = isBl ? 'إزالة من القائمة السوداء' : 'إضافة للقائمة السوداء';
     const reasonBox = document.getElementById('blacklistReason');
     reasonBox.style.display = isBl ? 'block' : 'none';
     reasonBox.value = data.doctor.blacklist_reason || '';
@@ -169,16 +170,21 @@ async function loadDoctorDetail(id) {
     data.doctor.visits.forEach(v => {
       const row = document.createElement('div');
       row.className = 'visit-row';
+      const noteBtn = IS_ADMIN
+        ? `<button class="btn btn-sm" data-id="${v.id}">إضافة/تعديل ملاحظة</button>`
+        : '';
       row.innerHTML = `
         <span class="visit-date">${escapeHtml(v.visit_date)}</span>
         <span class="visit-note">${v.note ? escapeHtml(v.note) : 'مفيش ملاحظة'}</span>
-        <button class="btn btn-sm" data-id="${v.id}" data-note="${escapeHtml(v.note || '')}">إضافة/تعديل ملاحظة</button>
+        ${noteBtn}
       `;
-      row.querySelector('button').addEventListener('click', (e) => {
-        document.getElementById('visitNoteId').value = v.id;
-        document.getElementById('visitNoteText').value = v.note || '';
-        openModal('modalVisitNote');
-      });
+      if (IS_ADMIN) {
+        row.querySelector('button').addEventListener('click', () => {
+          document.getElementById('visitNoteId').value = v.id;
+          document.getElementById('visitNoteText').value = v.note || '';
+          openModal('modalVisitNote');
+        });
+      }
       visitsList.appendChild(row);
     });
   } catch (e) { showToast(e.message); }

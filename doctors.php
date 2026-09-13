@@ -2,6 +2,8 @@
 declare(strict_types=1);
 require_once __DIR__ . '/includes/auth_check.php';
 $token = csrf_token();
+$isAdmin = is_admin();
+$groupId = active_group_id();
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -10,6 +12,7 @@ $token = csrf_token();
 <title>الدكاتره</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="csrf-token" content="<?= e($token) ?>">
+<meta name="is-admin" content="<?= $isAdmin ? '1' : '0' ?>">
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -21,11 +24,19 @@ $token = csrf_token();
     </div>
   </header>
 
+  <?php if ($isAdmin && !$groupId): ?>
+    <div class="empty-hint" style="margin-top:40px;">
+      لسه معندكش جروب شغّال عليه.
+      <a href="groups.php" style="color:var(--accent);">روح لصفحة الجروبات</a> واعمل واحد أو اختار جروب موجود.
+    </div>
+  <?php else: ?>
   <div class="app-layout">
     <aside class="sidebar">
       <div class="sidebar-header">dr names</div>
       <div class="sidebar-list" id="doctorList"></div>
+      <?php if ($isAdmin): ?>
       <button class="sidebar-add-btn" id="btnAddDoctor">+ إضافة دكتور</button>
+      <?php endif; ?>
     </aside>
 
     <main class="content-area">
@@ -36,34 +47,43 @@ $token = csrf_token();
           <div id="doctorAvatarWrap"></div>
           <div class="doctor-head-info">
             <div class="doctor-name" id="doctorNameDisplay"></div>
-            <input type="text" class="doctor-title-input" id="doctorTitle" placeholder="عنوان">
+            <input type="text" class="doctor-title-input" id="doctorTitle" placeholder="عنوان" <?= $isAdmin ? '' : 'disabled' ?>>
           </div>
+          <?php if ($isAdmin): ?>
           <button class="btn btn-danger" id="btnDeleteDoctor">حذف الدكتور</button>
+          <?php endif; ?>
         </div>
 
         <div class="section-box">
           <div class="section-title">القائمة السوداء</div>
           <div class="blacklist-row">
             <span class="status-badge" id="blacklistBadge"></span>
+            <?php if ($isAdmin): ?>
             <button class="btn" id="btnToggleBlacklist"></button>
+            <?php endif; ?>
           </div>
-          <textarea class="field-textarea" id="blacklistReason" placeholder="سبب الإدراج في القائمة السوداء" style="margin-top:10px; display:none;"></textarea>
+          <textarea class="field-textarea" id="blacklistReason" placeholder="سبب الإدراج في القائمة السوداء" style="margin-top:10px; display:none;" <?= $isAdmin ? '' : 'disabled' ?>></textarea>
         </div>
 
         <div class="section-box">
           <div class="section-title">مواعيد الزيارات</div>
           <div id="visitsList"></div>
+          <?php if ($isAdmin): ?>
           <button class="btn btn-primary btn-sm" id="btnAddVisit" style="margin-top:8px;">+ إضافة زيارة</button>
+          <?php endif; ?>
         </div>
 
         <div class="section-box">
           <div class="section-title">ملاحظة عامة عن الدكتور</div>
-          <textarea class="field-textarea" id="generalNote" placeholder="اكتب ملاحظة..."></textarea>
+          <textarea class="field-textarea" id="generalNote" placeholder="اكتب ملاحظة..." <?= $isAdmin ? '' : 'disabled' ?>></textarea>
+          <?php if ($isAdmin): ?>
           <button class="btn btn-primary btn-sm" id="btnSaveNote" style="margin-top:8px;">حفظ الملاحظة</button>
+          <?php endif; ?>
         </div>
       </div>
     </main>
   </div>
+  <?php endif; ?>
 
   <!-- Add doctor modal -->
   <div class="modal-overlay" id="modalAddDoctor">
